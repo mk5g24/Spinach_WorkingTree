@@ -180,9 +180,9 @@ end
 if (~isnumeric(waveform))||(~isreal(waveform))
     error('waveform must be an array of real numbers.');
 end
-if size(waveform,1)~=numel(spin_system.control.operators)
-    error('the number of rows in waveform must be equal to the number of controls.');
-end
+%if size(waveform,1)~=numel(spin_system.control.operators)
+%    error('the number of rows in waveform must be equal to the number of controls.');
+%end
 if ~isempty(spin_system.control.basis)
     if size(spin_system.control.basis,2)~=spin_system.control.pulse_ntpts
         error(['the number of columns in control.basis must be '...

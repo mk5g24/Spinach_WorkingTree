@@ -216,6 +216,19 @@ if isfield(control,'operators')
         report(spin_system,[pad('Number of commuting control pairs',60) int2str(n_commute)]);
 
     end
+
+    % Convert to crv format if necessary
+    if spin_system.control.crv
+        for n=1:spin_system.control.ncontrols
+            spin_system.control.operators{n}=crv(spin_system.control.operators{n});
+        end
+    end
+
+    control=rmfield(control,'operators');
+
+    % Inform the user
+    report(spin_system,[pad('Number of control operators',60) ...
+                        int2str(spin_system.control.ncontrols)]);    
     
 else
 
@@ -271,6 +284,17 @@ if isfield(control,'rho_init')
     % Inform the user
     report(spin_system,[pad('Initial states per ensemble member',60) ...
                         int2str(numel(spin_system.control.rho_init))]);
+
+    % Check for weights
+    if isfield(control,'rho_init_weights')
+
+        spin_system.control.rho_init_weights=weights(spin_system,control,'rho_init_weights');
+        control=rmfield(control,'rho_init_weights');
+
+    else
+        % Assume equal rho init weights
+        spin_system.control.rho_init_weights=ones(numel(spin_system.control.rho_init),1)/numel(spin_system.control.rho_init);
+    end
 
 else
 
@@ -444,14 +468,26 @@ if isfield(control,'distortion')
                         int2str(size(spin_system.control.distortion,1))]);
 
     % Block methods that use exact Hessians
-    if ismember(spin_system.control.method,{'newton','goodwin'})
+    if ismember(control.method,{'newton','goodwin'})
         error('waveform distortions are only available with LBFGS optimiser.');
+    end
+       
+    % Check for weights
+    if isfield(control,'distortion_weights')
+
+        spin_system.control.distortion_weights=weights(spin_system,control,'distortion_weights');
+        control=rmfield(control,'distortion_weights');
+
+    else
+        % Assume equal distortion weights
+        spin_system.control.distortion_weights=ones(numel(spin_system.control.distortion),1)/numel(spin_system.control.distortion);
     end
 
 else
     
     % Only one function that does nothing
     spin_system.control.distortion={@no_dist};
+    spin_system.control.distortion_weights=1;
     
     % Inform the user
     report(spin_system,[pad('Waveform distortion stages',60) 'none']);
@@ -503,6 +539,17 @@ if isfield(control,'pwr_levels')
                         num2str(max(spin_system.control.pwr_levels)/(2*pi),'%.9g')]);
     report(spin_system,[pad('   Min power multiplier, Hz',60) ...
                         num2str(min(spin_system.control.pwr_levels)/(2*pi),'%.9g')]);
+
+    % Check for weights
+    if isfield(control,'pwr_levels_weights')
+
+        spin_system.control.pwr_levels_weights=weights(spin_system,control,'pwr_levels_weights');
+        control=rmfield(control,'pwr_levels_weights');
+
+    else
+        % Assume equal distortion weights
+        spin_system.control.pwr_levels_weights=ones(numel(spin_system.control.pwr_levels),1)/numel(spin_system.control.pwr_levels);
+    end    
 
 else
 
@@ -558,12 +605,24 @@ if isfield(control,'offsets')&&isfield(control,'off_ops')
         report(spin_system,[pad(['   Channel ' int2str(n) ', max offset, Hz'],60) ...
                            num2str(max(spin_system.control.offsets{n}),'%+.9g')]);
     end
+
+    % Check for weights
+    if isfield(control,'n_offset_vals_weights')
+
+        spin_system.control.n_offset_vals_weights=weights(spin_system,control,'n_offset_vals_weights');
+        control=rmfield(control,'n_offset_vals_weights');
+
+    else
+        % Assume equal distortion weights
+        spin_system.control.n_offset_vals_weights=ones(numel(spin_system.control.n_offset_vals_weights),1)/numel(spin_system.control.n_offset_vals_weights);
+    end    
                 
 else
     
     % Default is no offsets
     spin_system.control.offsets={};
     spin_system.control.off_ops={};
+    spin_system.control.n_offset_vals_weights=1;
     
 end
 
@@ -752,6 +811,17 @@ if isfield(control,'drifts')
     spin_system.control.ndrifts=numel(control.drifts); 
     control=rmfield(control,'drifts');
 
+    % Check for weights
+    if isfield(control,'drifts_weights')
+
+        spin_system.control.ndrifts_weights=weights(spin_system,control,'drifts_weights');
+        control=rmfield(control,'drifts_weights');
+
+    else
+        % Assume equal distortion weights
+        spin_system.control.ndrifts_weights=ones(spin_system.control.ndrifts,1)/spin_system.control.ndrifts;
+    end
+
 else
     
     % Complain and bomb out
@@ -928,6 +998,14 @@ else
     report(spin_system,[pad('Number of phase cycle elements',60) '0']);
     
 end
+
+% Phase cycles should be equally weighted
+if numel(spin_system.control.phase_cycle)>0
+    spin_system.control.phase_cycle_weights = ones(numel(spin_system.control.phase_cycle),1)/numel(spin_system.control.phase_cycle);
+else
+    spin_system.control.phase_cycle_weights = 1;
+end
+
 
 % Process basis set
 if isfield(control,'basis')
@@ -1294,10 +1372,10 @@ if (~isempty(spin_system.control.plotting))&&...
                  
 end
 
-% In Liouville space, warn about non-Hermitian controls
-if ~all(cellfun(@ishermitian,spin_system.control.operators))
-    report(spin_system,'WARNING: not all control operators are Hermitian');
-end
+% Test for Hermitian controls
+%if ~all(cellfun(@ishermitian,spin_system.control.operators))
+%    report(spin_system,'WARNING: not all control operators are Hermitian');
+%end
 
 % Warn that plotting is expensive
 if ~isempty(spin_system.control.plotting)
@@ -1325,6 +1403,12 @@ if isfield(control,'parameters')
     spin_system.control.parameters=control.parameters;
     control=rmfield(control,'parameters');
     report(spin_system,'control.parameters received without parsing.');
+end
+
+% Operator Weights
+if isfield(control,'operator_weights')
+    spin_system.control.operator_weights = control.operator_weights;
+    control = rmfield(control, 'operator_weights');
 end
 
 % Catch unparsed fields

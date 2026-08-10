@@ -52,6 +52,7 @@ end
 % Extract ensemble grid dimensions
 n_state_pairs=numel(spin_system.control.rho_init);     % State-target pair count
 n_ens_systems=spin_system.control.ndrifts;             % Drift ensemble size
+n_ops_systems=numel(spin_system.control.operators);    % Operator ensemble size
 n_power_levls=numel(spin_system.control.pwr_levels);   % Power level count
 n_phase_specs=size(spin_system.control.phase_cycle,1); % Phase cycle line count
 n_distortions=size(spin_system.control.distortion,1);  % Distortion function ensemble size
@@ -63,6 +64,7 @@ catalog=[kron(ones(n_power_levls,1),catalog) kron((1:n_power_levls)',ones(size(c
 catalog=[kron(ones(n_offset_vals,1),catalog) kron((1:n_offset_vals)',ones(size(catalog,1),1))];
 catalog=[kron(ones(n_phase_specs,1),catalog) kron((1:n_phase_specs)',ones(size(catalog,1),1))];
 catalog=[kron(ones(n_distortions,1),catalog) kron((1:n_distortions)',ones(size(catalog,1),1))];
+catalog=[kron(ones(n_ops_systems,1),catalog) kron((1:n_ops_systems)',ones(size(catalog,1),1))];
 
 % Ensemble correlation: own state pair for each member
 if ismember('rho_ens',spin_system.control.ens_corrs)
@@ -144,11 +146,12 @@ end
     
 % Run the ensemble loop
 parfor (n=1:n_cases,nworkers) %#ok<*PFBNS>
-    
+
     % Extract ensemble indices
     n_rho=catalog(n,1); n_sys=catalog(n,2);
     n_pwr=catalog(n,3); n_off=catalog(n,4);
     n_phi=catalog(n,5); n_dis=catalog(n,6);
+    n_ops=catalog(n,7);
     
     % Get initial and target state
     rho_init=spin_system.control.rho_init{n_rho};
@@ -226,6 +229,9 @@ parfor (n=1:n_cases,nworkers) %#ok<*PFBNS>
     power_lvl=spin_system.control.pwr_levels(n_pwr);
     local_waveform=power_lvl*local_waveform;
 
+    % Grab the operators
+    local_operators = spin_system.control.operators{n_ops};
+
     % Call GRAPE
     if n_outputs==2
 
@@ -246,20 +252,20 @@ parfor (n=1:n_cases,nworkers) %#ok<*PFBNS>
             case {'sphten-liouv','zeeman-liouv'}
                 
                 % Call Liouville space version of the GRAPE function
-                [traj_data{n},fidelities{n}]=grape_liouv(spin_system,L,spin_system.control.operators,...
+                [traj_data{n},fidelities{n}]=grape_liouv(spin_system,L,local_operators,...
                                                          local_waveform,rho_init,rho_targ,...
                                                          spin_system.control.fidelity);
             case 'zeeman-hilb'
 
                 % Call Hilbert space version of the GRAPE function
-                [traj_data{n},fidelities{n}]=grape_hilb(spin_system,L,spin_system.control.operators,...
+                [traj_data{n},fidelities{n}]=grape_hilb(spin_system,L,local_operators,...
                                                         local_waveform,rho_init,rho_targ,...
                                                         spin_system.control.fidelity);
 
             case 'zeeman-wavef'
 
                 % Call Liouville space version of the GRAPE function (homomorphism)
-                [traj_data{n},fidelities{n}]=grape_liouv(spin_system,L,spin_system.control.operators,...
+                [traj_data{n},fidelities{n}]=grape_liouv(spin_system,L,local_operators,...
                                                          local_waveform,rho_init,rho_targ,...
                                                          spin_system.control.fidelity);
 
@@ -295,20 +301,20 @@ parfor (n=1:n_cases,nworkers) %#ok<*PFBNS>
             case {'sphten-liouv','zeeman-liouv'}
                 
                 % Call Liouville space version of the GRAPE function
-                [traj_data{n},fidelities{n},gradients{n}]=grape_liouv(spin_system,L,spin_system.control.operators,...
+                [traj_data{n},fidelities{n},gradients{n}]=grape_liouv(spin_system,L,local_operators,...
                                                                       local_waveform,rho_init,rho_targ,...
                                                                       spin_system.control.fidelity);
             case 'zeeman-hilb'
 
                 % Call Hilbert space version of the GRAPE function
-                [traj_data{n},fidelities{n},gradients{n}]=grape_hilb(spin_system,L,spin_system.control.operators,...
+                [traj_data{n},fidelities{n},gradients{n}]=grape_hilb(spin_system,L,local_operators,...
                                                                      local_waveform,rho_init,rho_targ,...
                                                                      spin_system.control.fidelity);
 
             case 'zeeman-wavef'
 
                 % Call Liouville space version of the GRAPE function (homomorphism)
-                [traj_data{n},fidelities{n},gradients{n}]=grape_liouv(spin_system,L,spin_system.control.operators,...
+                [traj_data{n},fidelities{n},gradients{n}]=grape_liouv(spin_system,L,local_operators,...
                                                                       local_waveform,rho_init,rho_targ,...
                                                                       spin_system.control.fidelity);
 
@@ -337,14 +343,14 @@ parfor (n=1:n_cases,nworkers) %#ok<*PFBNS>
                 
                 % Call Liouville space version of the GRAPE function
                 [traj_data{n},fidelities{n},...
-                 gradients{n},hessians{n}]=grape_liouv(spin_system,L,spin_system.control.operators,...
+                 gradients{n},hessians{n}]=grape_liouv(spin_system,L,local_operators,...
                                                        local_waveform,rho_init,rho_targ,...
                                                        spin_system.control.fidelity);
             case 'zeeman-hilb'
 
                 % Call Hilbert space version of the GRAPE function
                 [traj_data{n},fidelities{n},...
-                 gradients{n},hessians{n}]=grape_hilb(spin_system,L,spin_system.control.operators,...
+                 gradients{n},hessians{n}]=grape_hilb(spin_system,L,local_operators,...
                                                       local_waveform,rho_init,rho_targ,...
                                                       spin_system.control.fidelity);
 
@@ -352,7 +358,7 @@ parfor (n=1:n_cases,nworkers) %#ok<*PFBNS>
 
                 % Call Liouville space version of the GRAPE function (homomorphism)
                 [traj_data{n},fidelities{n},...
-                 gradients{n},hessians{n}]=grape_liouv(spin_system,L,spin_system.control.operators,...
+                 gradients{n},hessians{n}]=grape_liouv(spin_system,L,local_operators,...
                                                        local_waveform,rho_init,rho_targ,...
                                                        spin_system.control.fidelity);
 
@@ -438,6 +444,14 @@ parfor (n=1:n_cases,nworkers) %#ok<*PFBNS>
         hessians{n}=power_lvl*power_lvl*hessians{n}(:);
     end
     
+    % Apply operator weights
+    if isfield(spin_system.control,'operator_weights')
+        fidelities{n} = spin_system.control.operator_weights(n_ops)*fidelities{n};
+        if n_outputs>2
+            gradients{n} = spin_system.control.operator_weights(n_ops)*gradients{n};
+        end
+    end
+
 end
 
 % Apply trajectory options
@@ -456,11 +470,11 @@ end
     
 % Add up fidelities
 fidelities=cell2mat(fidelities);
-fidelity=sum(fidelities)/n_cases;
+fidelity=sum(fidelities)/n_cases*n_ops_systems;
 
 % Add up gradients
 if n_outputs>2
-    gradient=sum(cell2mat(gradients),2)/n_cases;
+    gradient=sum(cell2mat(gradients),2)/n_cases*n_ops_systems;
     gradient=reshape(gradient,size(waveform));
 end
 
@@ -510,9 +524,9 @@ end
 if (~isnumeric(waveform))||(~isreal(waveform))
     error('waveform must be an array of real numbers.');
 end
-if size(waveform,1)~=numel(spin_system.control.operators)
-    error('the number of rows in waveform must equal to the number of controls.');
-end
+%if size(waveform,1)~=numel(spin_system.control.operators)
+%    error('the number of rows in waveform must equal to the number of controls.');
+%end
 switch spin_system.control.integrator
     case 'rectangle'
         if size(waveform,2)~=spin_system.control.pulse_nsteps
