@@ -1,4 +1,4 @@
-% Cost function for optimal control using the GRAPE algorithm. Returns
+% Cost function for optimal control using the GRAPE algorithm. Returns 
 % fidelity, gradient and Hessian for a given waveform, specified in po-
 % lar coordinates. Only the phase channel gradient is returned, the am-
 % plitude profile is taken as a given. Syntax:

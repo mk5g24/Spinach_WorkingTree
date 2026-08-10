@@ -104,15 +104,22 @@ if spin_system.control.max_iter==0
     [data,fx]=objeval(x,cost_function,data,spin_system);
 end
 
+% Time spent on each GRAPE iteration
+data.t_spent = zeros(1,spin_system.control.max_iter);
+
 % Start the iteration loop
 for n=1:spin_system.control.max_iter
 
+    % Start timer for current loop iteration
+    t_grape_step = tic;
+    
     % Default exit flag
     exitflag=0;
     
     % Update iteration counter
     data.count.iter=data.count.iter+1;
-    
+
+
     % Get the search direction
     switch spin_system.control.method
         
@@ -223,8 +230,11 @@ for n=1:spin_system.control.max_iter
 
     end
 
+    % Stop the timer
+    data.t_spent(n) = toc(t_grape_step);
+
     % Report reference point diagnostics to user
-    itrep(spin_system,fx,g_ref,dir_ref,alpha,data);
+    itrep(spin_system,fx,g_ref,dir_ref,alpha,data,data.t_spent(n));
                                          
     % If all good
     if exitflag~=-2
@@ -284,9 +294,9 @@ end
 
 % Header printing function
 function header(spin_system)
-report(spin_system,'==============================================================================================');
-report(spin_system,'Iter  #f   #g   #H   #R    fidelity      penalties     total        alpha     |grad|     SDGA ');
-report(spin_system,'----------------------------------------------------------------------------------------------');
+report(spin_system,'========================================================================================================');
+report(spin_system,'Iter  #f   #g   #H   #R    fidelity      penalties     total        alpha     |grad|     SDGA     t_step');
+report(spin_system,'--------------------------------------------------------------------------------------------------------');
 end
 
 % Footer printing function
@@ -314,7 +324,7 @@ report(spin_system,'============================================================
 end
 
 % Iteration report function
-function itrep(spin_system,fx,g,dir,alpha,data)
+function itrep(spin_system,fx,g,dir,alpha,data,t_gs)
 
 % Performance figures
 fid=data.fx_sep_pen(1);
@@ -334,7 +344,8 @@ report(spin_system,[pad(num2str(data.count.iter,'%4.0f'),6),...
                     pad(num2str(fx,'%+9.6f'),11),'   '...
                     pad(num2str(alpha,'%4.0e'),9),...
                     pad(num2str(norm(g(:),2),'%0.2e'),12),...
-                    pad(num2str(dga,'%9.1f'),10)]);
+                    pad(num2str(dga,'%9.1f'),10),...
+                    pad(num2str(t_gs,'%9.1f'),10)]);
                 
 end
 

@@ -148,7 +148,7 @@ switch spin_system.control.integrator
         for n=1:nsteps
 
             % Cycle through the drifts array
-            H{n}=drifts{mod(n-1,ndrifts)+1};
+            H{n}=drifts{1}{mod(n-1,ndrifts)+1};
 
             % Add current controls
             for k=1:nctrls
@@ -180,8 +180,8 @@ switch spin_system.control.integrator
         for n=1:nsteps
 
             % Cycle through the drifts array
-            left_ham=drifts{mod(n-1,ndrifts)+1};
-            right_ham=drifts{mod(n,ndrifts)+1};
+            left_ham=drifts{1}{mod(n-1,ndrifts)+1};
+            right_ham=drifts{1}{mod(n,ndrifts)+1};
 
             % Add current controls to the interval edges
             for k=1:nctrls
@@ -299,7 +299,7 @@ if n_outputs>2
             cc_comm=spin_system.control.cc_comm;
 
             % Get the Hilbert dimension
-            dim=size(drifts{1},1);
+            dim=size(drifts{1}{1},1);
 
             % Loop over control sequence
             for n=1:(nsteps+1)
@@ -311,8 +311,8 @@ if n_outputs>2
                 if n==1
 
                     % Left pair of drifts
-                    drift_pair={drifts{mod(n-1,ndrifts)+1},...
-                                drifts{mod(n,ndrifts)+1}};
+                    drift_pair={drifts{1}{mod(n-1,ndrifts)+1},...
+                                drifts{1}{mod(n,ndrifts)+1}};
 
                     % Loop over controls
                     for k=1:nctrls
@@ -342,8 +342,8 @@ if n_outputs>2
                 elseif n==(nsteps+1)
 
                     % Right pair of drifts
-                    drift_pair={drifts{mod(n-2,ndrifts)+1},...
-                                drifts{mod(n-1,ndrifts)+1}};
+                    drift_pair={drifts{1}{mod(n-2,ndrifts)+1},...
+                                drifts{1}{mod(n-1,ndrifts)+1}};
 
                     % Loop over controls
                     for k=1:nctrls
@@ -377,8 +377,8 @@ if n_outputs>2
                     for k=1:nctrls
 
                         % Left pair of drifts
-                        drift_pair={drifts{mod(n-1,ndrifts)+1},...
-                                    drifts{mod(n,ndrifts)+1}};
+                        drift_pair={drifts{1}{mod(n-1,ndrifts)+1},...
+                                    drifts{1}{mod(n,ndrifts)+1}};
 
                         % Build the auxiliary matrix
                         [Right_DL,~]=aux_mat(drift_pair,controls,cc_comm_idx,...
@@ -400,8 +400,8 @@ if n_outputs>2
                         grad_col(k)=grad_col(k)+hdot(bwd_traj{n+1},rho_deriv);
 
                         % Right pair of drifts
-                        drift_pair={drifts{mod(n-2,ndrifts)+1},...
-                                    drifts{mod(n-1,ndrifts)+1}};
+                        drift_pair={drifts{1}{mod(n-2,ndrifts)+1},...
+                                    drifts{1}{mod(n-1,ndrifts)+1}};
 
                         % Build the auxiliary matrix
                         [~,Left_DR]=aux_mat(drift_pair,controls,cc_comm_idx,...
@@ -644,41 +644,38 @@ end
 end
 
 % Consistency enforcement
-function grumble(spin_system,drifts,controls,waveform,rho_init,rho_targ,fidelity_type)
+function grumble(spin_system,drifts,controls,waveform,rho_init,rho_targ)
 if ~ismember(spin_system.bas.formalism,{'zeeman-hilb'})
     error('this function requires a density matrix based formalism.');
 end
 if (~isnumeric(rho_init))||(~ismatrix(rho_init))||(size(rho_init,1)~=size(rho_init,2))
     error('rho_init must be a square matrix.');
 end
-if (~isnumeric(rho_targ))||(~ismatrix(rho_targ))||(size(rho_targ,1)~=size(rho_targ,2))
-    error('rho_targ must be a square matrix.');
+if (~isnumeric(rho_targ))||(~ismatrix(rho_init))||(size(rho_targ,1)~=size(rho_targ,2))
+    error('rho_targ must be a square vector.');
 end
-if (~ischar(fidelity_type))||(~ismember(fidelity_type,{'real','imag','square'}))
-    error('fidelity_type must be ''real'', ''imag'', or ''square''.');
-end
-if ~iscell(drifts)
-    error('drifts must be a cell array of matrices.');
-end
-for n=1:numel(drifts)
-    if (~isnumeric(drifts{n}))||(size(drifts{n},1)~=size(drifts{n},2))
-        error('all elements of drifts cell array must be square matrices.');
-    end
-    if (size(drifts{n},1)~=size(rho_init,1))||...
-       (size(drifts{n},1)~=size(rho_targ,1))
-        error('dimensions of drift, rho_init and rho_targ must be consistent.');
-    end
-end
+% if ~iscell(drifts)
+%     error('drifts must be a cell array of matrices.');
+% end
+% for n=1:numel(drifts)     
+%     if (~isnumeric(drifts{n}))||(size(drifts{n},1)~=size(drifts{n},2))
+%         error('all elements of drifts cell array must be square matrices.');
+%     end
+%     if (size(drifts{n},1)~=size(rho_init,1))||...
+%        (size(drifts{n},1)~=size(rho_targ,1))
+%         error('dimensions of drift, rho_init and rho_targ must be consistent.');
+%     end
+% end
 if ~iscell(controls)
     error('controls must be a cell array of square matrices.');
 end
-for n=1:numel(controls)
-    if (~isnumeric(controls{n}))||...
-       (size(controls{n},1)~=size(controls{n},2))||...
-       (size(controls{n},1)~=size(drifts{1},1))
-        error('control operators must have the same size as drift operators.');
-    end
-end
+% for n=1:numel(controls)
+%     if (~isnumeric(controls{n}))||...
+%        (size(controls{n},1)~=size(controls{n},2))||...
+%        (size(controls{n},1)~=size(drifts{1},1))
+%         error('control operators must have the same size as drift operators.');
+%     end
+% end
 if (~isnumeric(waveform))||(~isreal(waveform))
     error('waveform must be a real numeric array.');
 end
