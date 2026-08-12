@@ -50,7 +50,7 @@ for n=1:numel(systems)
     H=systems{n}{1}; R=systems{n}{2}; K=systems{n}{3};
     
     % Assign drift Liouvillians
-    drifts{n}={H+1i*R+1i*K};
+    drifts{n}=H+1i*R+1i*K;
     
     % Get hydrodynamics if present
     if numel(systems{n})==5

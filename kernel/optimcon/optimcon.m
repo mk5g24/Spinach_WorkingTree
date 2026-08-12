@@ -749,7 +749,7 @@ if isfield(control,'drifts')
         if ~all(cellfun(@ismatrix,control.drifts{n}(:)))
             error('control.drifts must be a cell array (over ensemble) of cell arrays (over time) of matrices.');
         end
-        if (numel(control.drifts{n})~=1)&&(numel(control.drifts{n})~=spin_system.control.pulse_ntpts)
+        if (numel(control.drifts{n})~=1)&&(numel(control.drifts{n})~=spin_system.control.pulse_ntpts)&&(mod(spin_system.control.pulse_ntpts,numel(control.drifts{n}))~=0)
             error(['need either 1 or ' int2str(spin_system.control.pulse_ntpts) ' elements in control.drift{' ...
                    int2str(n) '}, found ' int2str(numel(control.drifts{n})) ' elements.']);
         end
