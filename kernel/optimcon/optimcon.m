@@ -217,15 +217,6 @@ if isfield(control,'operators')
 
     end
 
-    % Convert to crv format if necessary
-    if spin_system.control.crv
-        for n=1:spin_system.control.ncontrols
-            spin_system.control.operators{n}=crv(spin_system.control.operators{n});
-        end
-    end
-
-    control=rmfield(control,'operators');
-
     % Inform the user
     report(spin_system,[pad('Number of control operators',60) ...
                         int2str(spin_system.control.ncontrols)]);    
