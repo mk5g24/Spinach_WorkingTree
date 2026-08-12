@@ -126,7 +126,7 @@ if n_outputs>2
     bwd_traj=cell(1,nsteps+1); bwd_traj{1}=rho_targ;
 end
 
-% Count the drifts
+% Count the drifts and controls
 ndrifts=numel(drifts);
 
 % Precompute interval Hamiltonians and propagators
@@ -142,7 +142,7 @@ switch spin_system.control.integrator
         parfor n=1:nsteps
 
             % Cycle through the drifts array
-            H{n}=drifts{1}{mod(n-1,ndrifts)+1};
+            H{n}=drifts{mod(n-1,ndrifts)+1};
 
             % Add current controls
             for k=1:nctrls
@@ -624,7 +624,7 @@ end
 end
 
 % Consistency enforcement
-function grumble(spin_system,drifts,controls,waveform,rho_init,rho_targ)
+function grumble(spin_system,drifts,controls,waveform,rho_init,rho_targ,fidelity_type)
 if ~ismember(spin_system.bas.formalism,{'zeeman-hilb'})
     error('this function requires a density matrix based formalism.');
 end
@@ -646,9 +646,9 @@ end
 %         error('dimensions of drift, rho_init and rho_targ must be consistent.');
 %     end
 % end
-if ~iscell(controls)
-    error('controls must be a cell array of square matrices.');
-end
+% if ~iscell(controls)
+%     error('controls must be a cell array of square matrices.');
+% end
 % for n=1:numel(controls)
 %     if (~isnumeric(controls{n}))||...
 %        (size(controls{n},1)~=size(controls{n},2))||...
@@ -659,9 +659,9 @@ end
 if (~isnumeric(waveform))||(~isreal(waveform))
     error('waveform must be a real numeric array.');
 end
-if size(waveform,1)~=numel(controls)
-    error('number of waveform rows must be equal to the number of controls.');
-end
+% if size(waveform,1)~=numel(controls)
+%     error('number of waveform rows must be equal to the number of controls.');
+% end
 if size(waveform,2)~=spin_system.control.pulse_ntpts
     error(['waveform must have ' int2str(spin_system.control.pulse_ntpts) ' columns.']);
 end

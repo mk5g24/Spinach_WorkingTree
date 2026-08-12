@@ -156,21 +156,23 @@ if isfield(control,'operators')
     % In Hilbert space, disallow non-Hermitian controls
     if strcmp('zeeman-hilb',spin_system.bas.formalism)
 
-        % Over controls
+        % Loop over control operator ensemble
         for n=1:numel(control.operators)
 
-            % Get pertinent norms
-            norm_a=cheap_norm(control.operators{n}-...
-                              control.operators{n}');
-            norm_b=cheap_norm(control.operators{n});
-
-            % Check the norms
-            if norm_a>1e-10*norm_b
-                error('all control generators must be Hermitian in Hilbert space.');
-            end
-
+            % Over controls
+            for m=1:numel(control.operators{n})
+    
+                % Get pertinent norms
+                norm_a=cheap_norm(control.operators{n}{m}-...
+                                  control.operators{n}{m}');
+                norm_b=cheap_norm(control.operators{n}{m});
+    
+                % Check the norms
+                if norm_a>1e-10*norm_b
+                    error('all control generators must be Hermitian in Hilbert space.');
+                end
+            end   
         end
-
     end
 
     % Control operator count
@@ -747,7 +749,7 @@ if isfield(control,'drifts')
         if ~all(cellfun(@ismatrix,control.drifts{n}(:)))
             error('control.drifts must be a cell array (over ensemble) of cell arrays (over time) of matrices.');
         end
-        if (numel(control.drifts{n})~=1)&&(numel(control.drifts{n})~=spin_system.control.pulse_ntpts)
+        if (numel(control.drifts{n})~=1)&&(numel(control.drifts{n})~=spin_system.control.pulse_ntpts)&&(mod(spin_system.control.pulse_ntpts,numel(control.drifts{n}))~=0)
             error(['need either 1 or ' int2str(spin_system.control.pulse_ntpts) ' elements in control.drift{' ...
                    int2str(n) '}, found ' int2str(numel(control.drifts{n})) ' elements.']);
         end
