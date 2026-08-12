@@ -174,7 +174,7 @@ switch spin_system.bas.formalism
         M=2*pi*parameters.rate*kron(d_dphi,speye([spn_dim spn_dim]));
 
         % Project relaxation and kinetics superoperators into the FP space
-        R=kron(speye([spc_dim spc_dim]),R); K=kron(speye([spc_dim spc_dim]),K);
+        if ~isfield(parameters,'stacked_drifts'); R=kron(speye([spc_dim spc_dim]),R); K=kron(speye([spc_dim spc_dim]),K); end
 
         % Project the initial state into the FP space
         if isfield(parameters,'rho0')&&strcmp(parameters.grid,'single_crystal')
@@ -312,12 +312,18 @@ parfor (q=1:n_orients,nworkers) %#ok<*PFBNS>
         % Liouville space
         case {'sphten-liouv','zeeman-liouv'}
 
-            % Assemble the Fokker-Planck evolution generator
-            G=clean_up(spin_system,blkdiag(H{:})+1i*M,spin_system.tols.liouv_zero);
-    
-            % Run the pulse sequence
-            ans_array{q}=pulse_sequence(spin_system,parameters,G,R,K);
+            if isfield(parameters,'stacked_drifts')
+                % Run the pulse sequence with a Hamiltonian stack
+                ans_array{q}=pulse_sequence(spin_system,parameters,H,R,K);
 
+            else
+                % Assemble the Fokker-Planck evolution generator
+                G=clean_up(spin_system,blkdiag(H{:})+1i*M,spin_system.tols.liouv_zero);
+        
+                % Run the pulse sequence
+                ans_array{q}=pulse_sequence(spin_system,parameters,G,R,K);
+            end
+                
         % Hilbert space
         case {'zeeman-hilb','zeeman-wavef'}
 
