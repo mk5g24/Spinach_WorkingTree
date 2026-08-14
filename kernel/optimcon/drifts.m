@@ -49,8 +49,12 @@ for n=1:numel(systems)
     % Get Liouvillian components
     H=systems{n}{1}; R=systems{n}{2}; K=systems{n}{3};
     
-    % Assign drift Liouvillians
-    drifts{n}=H+1i*R+1i*K;
+    % If Hamiltonian is stack of operators, dont do additional cell
+    if iscell(H)
+        drifts{n}=H+1i*R+1i*K;
+    else
+        drifts{n}={H+1i*R+1i*K};
+    end
     
     % Get hydrodynamics if present
     if numel(systems{n})==5
