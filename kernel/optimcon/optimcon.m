@@ -269,7 +269,7 @@ if isfield(control,'rho_init')
     % Check for weights
     if isfield(control,'rho_init_weights')
 
-        spin_system.control.rho_init_weights=weights(spin_system,control,'rho_init_weights');
+        spin_system.control.rho_init_weights=control.rho_init_weights;
         control=rmfield(control,'rho_init_weights');
 
     else
@@ -456,7 +456,7 @@ if isfield(control,'distortion')
     % Check for weights
     if isfield(control,'distortion_weights')
 
-        spin_system.control.distortion_weights=weights(spin_system,control,'distortion_weights');
+        spin_system.control.distortion_weights=control.distortion_weights;
         control=rmfield(control,'distortion_weights');
 
     else
@@ -525,7 +525,7 @@ if isfield(control,'pwr_levels')
     % Check for weights
     if isfield(control,'pwr_levels_weights')
 
-        spin_system.control.pwr_levels_weights=weights(spin_system,control,'pwr_levels_weights');
+        spin_system.control.pwr_levels_weights=control.pwr_levels_weights;
         control=rmfield(control,'pwr_levels_weights');
 
     else
@@ -565,9 +565,9 @@ if isfield(control,'offsets')&&isfield(control,'off_ops')
            (size(control.off_ops{n},1)~=size(control.off_ops{n},2))
             error('elements of control.off_ops must be square matrices.');
         end
-        if size(control.off_ops{n},1)~=size(spin_system.control.operators{1},1)
-            error('control.off_ops must have the same dimension as the control operators.');
-        end
+        % if size(control.off_ops{n},1)~=size(spin_system.control.operators{1},1)
+        %     error('control.off_ops must have the same dimension as the control operators.');
+        % end
     end
 
     % Reject non-Hermitian offsets where unitarity is required
@@ -599,7 +599,7 @@ if isfield(control,'offsets')&&isfield(control,'off_ops')
     % Check for weights
     if isfield(control,'n_offset_vals_weights')
 
-        spin_system.control.n_offset_vals_weights=weights(spin_system,control,'n_offset_vals_weights');
+        spin_system.control.n_offset_vals_weights=control.n_offset_vals_weights;
         control=rmfield(control,'n_offset_vals_weights');
 
     else
@@ -753,10 +753,10 @@ if isfield(control,'drifts')
             error(['need either 1 or ' int2str(spin_system.control.pulse_ntpts) ' elements in control.drift{' ...
                    int2str(n) '}, found ' int2str(numel(control.drifts{n})) ' elements.']);
         end
-        if ~all(cellfun(@(m)isequal(size(m),size(spin_system.control.operators{1})),...
-                        control.drifts{n}(:)))
-            error('drift generators must have the same dimension as the control operators.');
-        end
+        % if ~all(cellfun(@(m)isequal(size(m),size(spin_system.control.operators{1})),...
+        %                 control.drifts{n}(:)))
+        %     error('drift generators must have the same dimension as the control operators.');
+        % end
     end
     if ~all(cellfun(@numel,control.drifts(:))==numel(control.drifts{1}))
         error('all time-dependent drifts must have the same number of time slices.');
@@ -793,7 +793,7 @@ if isfield(control,'drifts')
     % Check for weights
     if isfield(control,'drifts_weights')
 
-        spin_system.control.ndrifts_weights=weights(spin_system,control,'drifts_weights');
+        spin_system.control.ndrifts_weights=control.drifts_weights;
         control=rmfield(control,'drifts_weights');
 
     else
